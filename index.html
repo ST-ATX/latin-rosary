@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latin Rosary Pronunciation Trainer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e8e8e8;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        /* Prayer Selection */
+        .prayer-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        
+        .prayer-tab {
+            padding: 10px 18px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid #d4af37;
+            border-radius: 25px;
+            color: #d4af37;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+        
+        .prayer-tab:hover, .prayer-tab.active {
+            background: #d4af37;
+            color: #1a1a2e;
+        }
+        
+        /* Chant Display Section */
+        .chant-section {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .chant-title {
+            text-align: center;
+            color: #d4af37;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            font-variant: small-caps;
+            letter-spacing: 2px;
+        }
+        
+        .chant-text {
+            font-size: 1.25em;
+            line-height: 2.4;
+            text-align: center;
+            font-style: italic;
+            overflow: visible;
+        }
+        
+        .chant-phrase {
+            display: inline-block;
+            position: relative;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        
+        .chant-phrase:hover {
+            background: rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+        }
+        
+        /* Tooltip for hover translation */
+        .chant-phrase::after {
+            content: attr(data-english);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #d4af37;
+            color: #1a1a2e;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-style: normal;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+        
+        .chant-phrase:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Full Prayer Audio Control */
+        .full-audio-section {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .full-audio-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #d4af37, #b8960c);
+            border: none;
+            border-radius: 25px;
+            color: #1a1a2e;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .full-audio-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+        
+        .full-audio-btn.playing {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+        }
+        
+        /* Phrase Drill Section */
+        .drill-section {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .drill-header {
+            text-align: center;
+            color: #d4af37;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .phrase-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .phrase-row {
+            display: grid;
+            grid-template-columns: 50px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .phrase-row:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+        
+        .phrase-row:active {
+            transform: scale(0.99);
+        }
+        
+        .phrase-row.playing {
+            background: rgba(212, 175, 55, 0.15);
+            border-color: #d4af37;
+        }
+        
+        .phrase-play-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.2);
+            border: 2px solid #d4af37;
+            color: #d4af37;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .phrase-play-btn:hover {
+            background: #d4af37;
+            color: #1a1a2e;
+        }
+        
+        .phrase-play-btn.playing {
+            background: #4ade80;
+            border-color: #4ade80;
+            color: #1a1a2e;
+        }
+        
+        .phrase-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .phrase-latin {
+            font-size: 1.1em;
+            color: #fff;
+            font-style: italic;
+        }
+        
+        .phrase-english {
+            font-size: 0.85em;
+            color: #888;
+        }
+        
+        .loop-toggle {
+            padding: 6px 12px;
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 15px;
+            color: #4ade80;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .loop-toggle:hover {
+            background: rgba(74, 222, 128, 0.2);
+        }
+        
+        .loop-toggle.active {
+            background: #4ade80;
+            color: #1a1a2e;
+        }
+        
+        /* Hidden video element */
+        #hiddenVideo {
+            display: none;
+        }
+        
+        /* Instructions */
+        .instructions {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #888;
+        }
+        
+        .instructions strong { color: #d4af37; }
+        
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #666;
+            font-size: 0.8em;
+        }
+        
+        footer a { color: #d4af37; }
+        
+        @media (max-width: 600px) {
+            .phrase-row {
+                grid-template-columns: 40px 1fr;
+            }
+            .loop-toggle {
+                display: none;
+            }
+            .chant-text {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🙏 Latin Rosary Pronunciation Trainer</h1>
+        
+        <div class="prayer-tabs" id="prayerTabs">
+            <button class="prayer-tab active" data-prayer="pater">Pater Noster</button>
+            <button class="prayer-tab" data-prayer="ave">Ave María</button>
+            <button class="prayer-tab" data-prayer="gloria">Glória Patri</button>
+            <button class="prayer-tab" data-prayer="credo">Credo</button>
+            <button class="prayer-tab" data-prayer="salve">Salve Regína</button>
+            <button class="prayer-tab" data-prayer="michael">St. Michael</button>
+        </div>
+        
+        <!-- Chant Display -->
+        <div class="chant-section">
+            <div class="chant-title" id="chantTitle">Pater Noster</div>
+            <div class="chant-text" id="chantText"></div>
+        </div>
+        
+        <!-- Full Prayer Audio -->
+        <div class="full-audio-section">
+            <button class="full-audio-btn" id="playFullBtn">▶ Play Full Prayer</button>
+        </div>
+        
+        <!-- Phrase Drill Section -->
+        <div class="drill-section">
+            <div class="drill-header">Click any phrase to practice pronunciation:</div>
+            <div class="phrase-grid" id="phraseGrid"></div>
+        </div>
+        
+        <div class="instructions">
+            <strong>Click</strong> a phrase to hear it • 
+            <strong>🔁 Loop</strong> to repeat continuously
+        </div>
+        
+        <!-- Chant Video Section -->
+        <div class="chant-video-section" style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid rgba(212, 175, 55, 0.3);">
+            <div style="text-align: center; color: #d4af37; font-size: 1.2em; margin-bottom: 15px; font-variant: small-caps;">Chanted Version</div>
+            <div style="text-align: center;">
+                <a id="chantVideoLink" href="#" target="_blank" style="display: inline-flex; align-items: center; gap: 10px; padding: 15px 30px; background: linear-gradient(135deg, #c4302b, #8b0000); border-radius: 8px; color: white; text-decoration: none; font-size: 1.1em; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                    Watch Chanted Prayer on YouTube
+                </a>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Audio from <a href="https://www.prayinglatin.com" target="_blank">PrayingLatin.com</a></p>
+            <p style="margin-top:8px; font-style:italic;">Ad Majorem Dei Gloriam ✝️</p>
+        </footer>
+    </div>
+    
+    <!-- Hidden audio for phrase playback (audio element prevents iOS fullscreen takeover) -->
+    <audio id="hiddenAudio" preload="auto" playsinline></audio>
+
+    <script>
+        // Audio player for full prayer MP3s
+        let fullPrayerAudio = new Audio();
+        fullPrayerAudio.setAttribute('playsinline', '');
+        
+        fullPrayerAudio.addEventListener('ended', function() {
+            document.getElementById('playFullBtn').classList.remove('playing');
+            document.getElementById('playFullBtn').textContent = '▶ Play Full Prayer';
+        });
+        
+        function playFullPrayerAudio(url) {
+            fullPrayerAudio.src = url;
+            fullPrayerAudio.play();
+            document.getElementById('playFullBtn').classList.add('playing');
+            document.getElementById('playFullBtn').textContent = '⏹ Stop';
+        }
+        
+        function stopFullPrayerAudio() {
+            fullPrayerAudio.pause();
+            fullPrayerAudio.currentTime = 0;
+            document.getElementById('playFullBtn').classList.remove('playing');
+            document.getElementById('playFullBtn').textContent = '▶ Play Full Prayer';
+        }
+        
+        const prayers = {
+            pater: {
+                title: "Pater Noster",
+                video: "https://www.prayinglatin.com/wp-content/uploads/2021/07/Pater-Noster-Learn.mp4",
+                chantYouTube: "Zt9zteApmdA",
+                spokenMp3: "https://www.boston-catholic-journal.com/preces-catholicae-sacrosanctae/traditional-catholic-prayers-in-latin-only/2-pater-noster-our-father-030616.mp3",
+                phrases: [
+                    { start: 0, end: 5, latin: "Pater noster", english: "Our Father" },
+                    { start: 5, end: 12, latin: "qui es in cǽlis", english: "who art in heaven" },
+                    { start: 12, end: 18, latin: "sanctificétur", english: "hallowed be" },
+                    { start: 18, end: 24, latin: "nómen túum", english: "thy name" },
+                    { start: 24, end: 30, latin: "Advéniat", english: "Thy kingdom come" },
+                    { start: 30, end: 36, latin: "regnum túum", english: "Thy kingdom" },
+                    { start: 36, end: 45, latin: "fíat volúntas túa", english: "Thy will be done" },
+                    { start: 45, end: 54, latin: "sicut in cǽlo et in terra", english: "on earth as it is in heaven" },
+                    { start: 54, end: 61, latin: "Pánem nóstrum", english: "bread our" },
+                    { start: 61, end: 67, latin: "cotidiánum", english: "daily" },
+                    { start: 67, end: 75, latin: "da nobis hódie", english: "give us this day" },
+                    { start: 75, end: 82, latin: "et dimítte nóbis", english: "and forgive us" },
+                    { start: 82, end: 89, latin: "débita nóstra", english: "our trespasses" },
+                    { start: 89, end: 96, latin: "sicut et nos", english: "as we also" },
+                    { start: 96, end: 104, latin: "dimíttimus", english: "we forgive" },
+                    { start: 104, end: 112, latin: "debitóribus nóstris", english: "those who trespass against us" },
+                    { start: 112, end: 120, latin: "et ne nos indúcas", english: "and lead us not" },
+                    { start: 120, end: 128, latin: "in tentatiónem", english: "into temptation" },
+                    { start: 128, end: 141, latin: "sed líbera nos a malo. Amen.", english: "but deliver us from evil. Amen." }
+                ]
+            },
+            ave: {
+                title: "Ave María",
+                video: "https://www.prayinglatin.com/wp-content/uploads/2021/08/Ave-Maria.mp4",
+                chantYouTube: "aKb0BZOQ0XU",
+                spokenMp3: "https://www.boston-catholic-journal.com/preces-catholicae-sacrosanctae/traditional-catholic-prayers-in-latin-only/3-ave-maria-hail-mary-030616.mp3",
+                phrases: [
+                    { start: 5, end: 11, latin: "Áve María", english: "Hail Mary" },
+                    { start: 11, end: 17, latin: "grátia pléna", english: "full of grace" },
+                    { start: 17, end: 25, latin: "Dóminus técum", english: "the Lord is with thee" },
+                    { start: 25, end: 33, latin: "Benedícta tu", english: "Blessed art thou" },
+                    { start: 33, end: 41, latin: "in muliéribus", english: "among women" },
+                    { start: 41, end: 49, latin: "et benedíctus", english: "and blessed" },
+                    { start: 49, end: 67, latin: "fructus ventris túi, Iésus", english: "the fruit of thy womb, Jesus" },
+                    { start: 67, end: 75, latin: "Sáncta María", english: "Holy Mary" },
+                    { start: 75, end: 81, latin: "Máter Déi", english: "Mother of God" },
+                    { start: 81, end: 92, latin: "óra pro nóbis peccatóribus", english: "pray for us sinners" },
+                    { start: 92, end: 100, latin: "nunc, et in hóra", english: "now and at the hour" },
+                    { start: 100, end: 108, latin: "mórtis nóstræ", english: "of our death" },
+                    { start: 108, end: 118, latin: "Amén.", english: "Amen." }
+                ]
+            },
+            gloria: {
+                title: "Glória Patri",
+                video: "https://www.prayinglatin.com/wp-content/uploads/2021/08/Gloria-Patri-Latin.mp4",
+                chantYouTube: "6n1MgDrM2xU",
+                spokenMp3: "https://www.boston-catholic-journal.com/preces-catholicae-sacrosanctae/traditional-catholic-prayers-in-latin-only/04-gloria-patri-glory-be-to-the-father-030616.mp3",
+                phrases: [
+                    { start: 5, end: 11, latin: "Glória Pátri", english: "Glory be to the Father" },
+                    { start: 11, end: 22, latin: "et Fílio", english: "and to the Son" },
+                    { start: 22, end: 32, latin: "et Spirítui Sáncto", english: "and to the Holy Spirit" },
+                    { start: 32, end: 38, latin: "Sicut érat in princípio", english: "As it was in the beginning" },
+                    { start: 38, end: 50, latin: "et nunc et sémper", english: "is now and ever shall be" },
+                    { start: 50, end: 58, latin: "et in sǽcula sæculórum", english: "world without end" },
+                    { start: 58, end: 65, latin: "Amen.", english: "Amen." }
+                ]
+            },
+            credo: {
+                title: "Credo (Apostles' Creed)",
+                video: "https://www.prayinglatin.com/wp-content/uploads/2021/08/The-Apostles-Creed-Latin-Rosary.mp4",
+                chantYouTube: "IcC1Bp13n_4",
+                spokenMp3: "https://www.boston-catholic-journal.com/preces-catholicae-sacrosanctae/traditional-catholic-prayers-in-latin-only/symbolum-apostolorum-apostles-creed.mp3",
+                phrases: [
+                    { start: 0, end: 10, latin: "Credo in Déum", english: "I believe in God" },
+                    { start: 10, end: 18, latin: "Pátrem omnipoténtem", english: "the Father almighty" },
+                    { start: 18, end: 28, latin: "Creatórem cǽli et térræ", english: "Creator of heaven and earth" },
+                    { start: 28, end: 40, latin: "Et in Iésum Chrístum", english: "And in Jesus Christ" },
+                    { start: 40, end: 50, latin: "Fílium éjus únicum", english: "His only Son" },
+                    { start: 50, end: 58, latin: "Dóminum nóstrum", english: "our Lord" },
+                    { start: 58, end: 72, latin: "qui concéptus est de Spíritu Sáncto", english: "who was conceived by the Holy Spirit" },
+                    { start: 72, end: 84, latin: "nátus ex María Vírgine", english: "born of the Virgin Mary" },
+                    { start: 84, end: 96, latin: "pássus sub Póntio Piláto", english: "suffered under Pontius Pilate" },
+                    { start: 96, end: 110, latin: "crucifíxus, mórtuus, et sepúltus", english: "was crucified, died, and was buried" },
+                    { start: 110, end: 120, latin: "descéndit ad ínferos", english: "He descended into hell" },
+                    { start: 120, end: 132, latin: "tértia die resurréxit a mórtuis", english: "on the third day He rose from the dead" },
+                    { start: 132, end: 142, latin: "ascéndit ad cǽlos", english: "He ascended into heaven" },
+                    { start: 142, end: 156, latin: "sedet ad déxteram Dei Pátris omnipoténtis", english: "sits at the right hand of God the Father almighty" },
+                    { start: 156, end: 170, latin: "inde ventúrus est judicáre vivos et mórtuos", english: "from thence He shall come to judge the living and the dead" },
+                    { start: 170, end: 182, latin: "Credo in Spíritum Sánctum", english: "I believe in the Holy Spirit" },
+                    { start: 182, end: 194, latin: "sánctam Ecclésiam cathólicam", english: "the holy Catholic Church" },
+                    { start: 194, end: 206, latin: "sanctórum communiónem", english: "the communion of saints" },
+                    { start: 206, end: 216, latin: "remissiónem peccatórum", english: "the forgiveness of sins" },
+                    { start: 216, end: 228, latin: "carnis resurrectiónem", english: "the resurrection of the body" },
+                    { start: 228, end: 240, latin: "vitam ætérnam", english: "and life everlasting" },
+                    { start: 240, end: 301, latin: "Amen.", english: "Amen." }
+                ]
+            },
+            salve: {
+                title: "Salve Regína",
+                video: "https://www.prayinglatin.com/wp-content/uploads/2021/08/Salve-Regina.mp4",
+                chantYouTube: "p_P_72TmWQM",
+                spokenMp3: "https://www.boston-catholic-journal.com/preces-catholicae-sacrosanctae/traditional-catholic-prayers-in-latin-only/08-salve-regina-hail-holy-queen-030616.mp3",
+                phrases: [
+                    { start: 3, end: 13, latin: "Sálve Regína", english: "Hail Holy Queen" },
+                    { start: 13, end: 23, latin: "Máter misericórdiæ", english: "Mother of Mercy" },
+                    { start: 23, end: 33, latin: "víta, dulcédo", english: "our life, our sweetness" },
+                    { start: 33, end: 45, latin: "et spes nóstra, sálve", english: "and our hope, hail" },
+                    { start: 45, end: 55, latin: "Ad te clamámus", english: "To thee do we cry" },
+                    { start: 55, end: 68, latin: "éxsules fílii Hévæ", english: "poor banished children of Eve" },
+                    { start: 68, end: 80, latin: "Ad te suspirámus", english: "To thee do we send up our sighs" },
+                    { start: 80, end: 90, latin: "geméntes et fléntes", english: "mourning and weeping" },
+                    { start: 90, end: 100, latin: "in hac lacrimárum válle", english: "in this valley of tears" },
+                    { start: 100, end: 112, latin: "Éia ergo, advocáta nóstra", english: "Turn then, most gracious advocate" },
+                    { start: 112, end: 126, latin: "illos túos misericórdes óculos", english: "thine eyes of mercy" },
+                    { start: 126, end: 138, latin: "ad nos convérte", english: "toward us" },
+                    { start: 138, end: 152, latin: "Et Iésum, benedíctum frúctum véntris túi", english: "And after this our exile show unto us Jesus" },
+                    { start: 152, end: 166, latin: "nóbis post hoc exsílium osténde", english: "the blessed fruit of thy womb" },
+                    { start: 166, end: 180, latin: "O clémens, O pía", english: "O clement, O loving" },
+                    { start: 180, end: 205, latin: "O dulcis Vírgo María", english: "O sweet Virgin Mary" }
+                ]
+            },
+            michael: {
+                title: "Orátio ad Sanctum Michaëlem",
+                video: "https://www.prayinglatin.com/wp-content/uploads/2019/03/stmichael.mp3",
+                chantYouTube: null,
+                spokenMp3: "https://www.boston-catholic-journal.com/preces-catholicae-sacrosanctae/traditional-catholic-prayers-in-latin-only/24-prayer-to-st-michael-the-archangel-030616.mp3",
+                phrases: [
+                    { start: 0, end: 8, latin: "Sáncte Míchael Archángele", english: "Saint Michael the Archangel" },
+                    { start: 8, end: 14, latin: "defénde nos in proélio", english: "defend us in battle" },
+                    { start: 14, end: 22, latin: "cóntra nequítiam et insídias diáboli", english: "against the malice and snares of the devil" },
+                    { start: 22, end: 28, latin: "ésto præsídium", english: "be our protection" },
+                    { start: 28, end: 34, latin: "Ímperet ílli Déus", english: "May God rebuke him" },
+                    { start: 34, end: 40, latin: "súpplices deprecámur", english: "we humbly pray" },
+                    { start: 40, end: 48, latin: "tuque, prínceps milítiæ cæléstis", english: "and do thou, O Prince of the heavenly host" },
+                    { start: 48, end: 56, latin: "Sátanam aliósque spíritus malígnos", english: "Satan and all evil spirits" },
+                    { start: 56, end: 64, latin: "qui ad perditiónem animárum", english: "who wander through the world" },
+                    { start: 64, end: 72, latin: "pervagántur in múndo", english: "for the ruin of souls" },
+                    { start: 72, end: 80, latin: "divína virtúte, in inférnum detrúde", english: "by the power of God, thrust into hell" },
+                    { start: 80, end: 90, latin: "Ámen.", english: "Amen." }
+                ]
+            }
+        };
+
+        let currentPrayer = 'pater';
+        let video = document.getElementById('hiddenAudio');
+        let isLooping = false;
+        let loopPhraseIndex = -1;
+        let currentPhraseIndex = -1;
+
+        // Initialize
+        function init() {
+            loadPrayer('pater');
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Prayer tab clicks
+            document.querySelectorAll('.prayer-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.prayer-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    loadPrayer(tab.dataset.prayer);
+                });
+            });
+
+            // Play full button
+            document.getElementById('playFullBtn').addEventListener('click', playFull);
+
+            // Audio time update for looping
+            video.addEventListener('timeupdate', handleTimeUpdate);
+            video.addEventListener('ended', handleEnded);
+        }
+
+        function loadPrayer(prayerKey) {
+            currentPrayer = prayerKey;
+            const prayer = prayers[prayerKey];
+            
+            // Update title
+            document.getElementById('chantTitle').textContent = prayer.title;
+            
+            // Build chant text with hover tooltips
+            const chantText = prayer.phrases.map((phrase, idx) => 
+                `<span class="chant-phrase" data-english="${phrase.english}" data-idx="${idx}">${phrase.latin}</span>`
+            ).join(' ');
+            document.getElementById('chantText').innerHTML = chantText;
+            
+            // Build phrase grid
+            const grid = document.getElementById('phraseGrid');
+            grid.innerHTML = prayer.phrases.map((phrase, idx) => `
+                <div class="phrase-row" data-idx="${idx}">
+                    <button class="phrase-play-btn" data-idx="${idx}">▶</button>
+                    <div class="phrase-text">
+                        <div class="phrase-latin">${phrase.latin}</div>
+                        <div class="phrase-english">${phrase.english}</div>
+                    </div>
+                    <button class="loop-toggle" data-idx="${idx}">🔁 Loop</button>
+                </div>
+            `).join('');
+            
+            // Add click listeners
+            grid.querySelectorAll('.phrase-row').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    // Don't trigger if clicking the loop button
+                    if (!e.target.classList.contains('loop-toggle')) {
+                        playPhrase(parseInt(row.dataset.idx));
+                    }
+                });
+            });
+            
+            grid.querySelectorAll('.loop-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleLoop(parseInt(btn.dataset.idx));
+                });
+            });
+            
+            // Chant phrase clicks
+            document.querySelectorAll('.chant-phrase').forEach(span => {
+                span.addEventListener('click', () => playPhrase(parseInt(span.dataset.idx)));
+            });
+            
+            // Load audio source (MP4 video files work as audio-only in <audio> element)
+            video.src = prayer.video;
+            video.load();
+            
+            // Set chant YouTube link
+            const chantLink = document.getElementById('chantVideoLink');
+            if (prayer.chantYouTube) {
+                chantLink.href = `https://www.youtube.com/watch?v=${prayer.chantYouTube}`;
+                chantLink.style.display = 'inline-block';
+            } else {
+                chantLink.style.display = 'none';
+            }
+            
+            // Reset state
+            stopAudio();
+        }
+
+        function playPhrase(idx) {
+            const prayer = prayers[currentPrayer];
+            const phrase = prayer.phrases[idx];
+            
+            // Make sure we're not in "full prayer" mode
+            document.getElementById('playFullBtn').classList.remove('playing');
+            document.getElementById('playFullBtn').textContent = '▶ Play Full Prayer';
+            
+            currentPhraseIndex = idx;
+            video.currentTime = phrase.start;
+            video.play();
+            
+            updatePlayingUI(idx);
+        }
+
+        function playFull() {
+            const prayer = prayers[currentPrayer];
+            const btn = document.getElementById('playFullBtn');
+            
+            // If already playing, stop
+            if (btn.classList.contains('playing')) {
+                stopFullPrayerAudio();
+                video.pause();
+                return;
+            }
+            
+            // Stop any phrase playback
+            stopAudio();
+            
+            // If spoken MP3 is available, use it
+            if (prayer.spokenMp3) {
+                playFullPrayerAudio(prayer.spokenMp3);
+                return;
+            }
+            
+            // Fallback to MP4 video
+            isLooping = false;
+            loopPhraseIndex = -1;
+            video.currentTime = 0;
+            video.play();
+            
+            btn.classList.add('playing');
+            btn.textContent = '⏹ Stop';
+        }
+
+        function stopAudio() {
+            video.pause();
+            stopFullPrayerAudio();
+            isLooping = false;
+            loopPhraseIndex = -1;
+            currentPhraseIndex = -1;
+            
+            // Reset UI
+            document.querySelectorAll('.phrase-row').forEach(row => row.classList.remove('playing'));
+            document.querySelectorAll('.phrase-play-btn').forEach(btn => btn.classList.remove('playing'));
+            document.querySelectorAll('.loop-toggle').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('playFullBtn').classList.remove('playing');
+            document.getElementById('playFullBtn').textContent = '▶ Play Full Prayer';
+        }
+
+        function toggleLoop(idx) {
+            if (loopPhraseIndex === idx) {
+                // Turn off loop
+                isLooping = false;
+                loopPhraseIndex = -1;
+                document.querySelectorAll('.loop-toggle').forEach(btn => btn.classList.remove('active'));
+            } else {
+                // Turn on loop for this phrase
+                isLooping = true;
+                loopPhraseIndex = idx;
+                document.querySelectorAll('.loop-toggle').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`.loop-toggle[data-idx="${idx}"]`).classList.add('active');
+                playPhrase(idx);
+            }
+        }
+
+        function handleTimeUpdate() {
+            const prayer = prayers[currentPrayer];
+            const currentTime = video.currentTime;
+            
+            // If playing a specific phrase (not full prayer), stop at end of phrase
+            if (currentPhraseIndex >= 0 && !document.getElementById('playFullBtn').classList.contains('playing')) {
+                const phrase = prayer.phrases[currentPhraseIndex];
+                
+                if (currentTime >= phrase.end - 0.1) {
+                    if (isLooping && loopPhraseIndex === currentPhraseIndex) {
+                        // Loop back to start of this phrase
+                        video.currentTime = phrase.start;
+                    } else {
+                        // Stop at end of phrase
+                        video.pause();
+                        updatePlayingUI(-1);
+                        currentPhraseIndex = -1;
+                    }
+                    return;
+                }
+            }
+            
+            // Update UI to show which phrase is playing (for full prayer playback)
+            for (let i = 0; i < prayer.phrases.length; i++) {
+                if (currentTime >= prayer.phrases[i].start && currentTime < prayer.phrases[i].end) {
+                    if (currentPhraseIndex !== i) {
+                        currentPhraseIndex = i;
+                        updatePlayingUI(i);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function handleEnded() {
+            if (isLooping && loopPhraseIndex >= 0) {
+                playPhrase(loopPhraseIndex);
+            } else {
+                stopAudio();
+            }
+        }
+
+        function updatePlayingUI(idx) {
+            // Update phrase rows
+            document.querySelectorAll('.phrase-row').forEach((row, i) => {
+                row.classList.toggle('playing', i === idx);
+            });
+            document.querySelectorAll('.phrase-play-btn').forEach((btn, i) => {
+                btn.classList.toggle('playing', i === idx);
+            });
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
